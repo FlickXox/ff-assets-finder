@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FF Assets Finder</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for a sleek, dark interface */
+        body {
+            /* UPDATED: Set Poppins as the new primary font */
+            font-family: 'Poppins', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            min-height: 100vh;
+            display: flex; /* Added to position footer correctly */
+            flex-direction: column; /* Added to position footer correctly */
+            /* NEW: Decrease base font size for a smaller overall look */
+            font-size: 0.875rem; /* Equivalent to 14px */
+            line-height: 1.5; /* Slightly tighter line height */
+        }
+        /* Basic spinner animation */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #A3E635; /* Lime spinner */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* --- NEW: Title Animation CSS (Pulsating Neon Glow) --- */
+        .animated-title {
+            animation: neon-pulse 1.5s infinite alternate;
+            text-shadow: 0 0 5px #A3E635, 0 0 10px #A3E635, 0 0 20px #65A30D;
+        }
+
+        @keyframes neon-pulse {
+            from {
+                text-shadow: 0 0 5px #A3E635, 0 0 10px #A3E635, 0 0 20px #65A30D, 0 0 30px #65A30D;
+            }
+            to {
+                text-shadow: 0 0 2px #A3E635, 0 0 4px #A3E635, 0 0 10px #65A30D, 0 0 15px #65A30D;
+            }
+        }
+        
+        /* --- NEW: Copyright Animation CSS (Shimmer Background) --- */
+        .animated-copyright {
+            background-image: linear-gradient(90deg, #d1d5db 0%, #a3e635 20%, #d1d5db 40%, #d1d5db 100%);
+            background-size: 200% auto;
+            /* Use -webkit- for text effects */
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            /* Adjust color for fallback if needed, but transparent is key */
+            color: #A3E635; 
+            animation: shimmer-bg 4s linear infinite;
+        }
+
+        @keyframes shimmer-bg {
+            to {
+                background-position: -200% center;
+            }
+        }
+
+        /* --- NEON GLOW FOCUS EFFECT for Input Field --- */
+        .neon-glow-focus:focus {
+            box-shadow: 0 0 8px rgba(163, 230, 53, 0.9), 0 0 15px rgba(163, 230, 53, 0.3); /* Lime Glow */
+            border-color: #A3E635;
+        }
+
+        /* --- NEW STYLE FOR SELECT TYPE (LIME ACCENT) --- */
+        .segmented-control label {
+            /* Base styles for unselected cards */
+            transition: all 0.3s ease-in-out;
+            border-color: #374151; /* gray-700 */
+            background-color: #1F2937; /* gray-800 */
+        }
+        .segmented-control label:hover {
+            /* Hover state */
+            border-color: #A3E635; /* Lime 400 on hover */
+        }
+        /* Unselected icon (text) color (Lime) */
+        .segmented-control label span.icon-text {
+            color: #A3E635; /* Lime 400 */
+            /* DECREASED SIZE: Changed from 2rem (text-4xl) to 1.5rem */
+            font-size: 1.5rem; 
+            line-height: 1;
+            font-weight: bold;
+        }
+        .segmented-control input:checked + label {
+            /* Selected state: solid color, white text/icon, strong shadow */
+            background-color: #65A30D; /* Lime 600 */
+            border-color: #A3E635; 
+            color: white;
+            box-shadow: 0 0 15px rgba(163, 230, 53, 0.8), inset 0 0 5px rgba(163, 230, 53, 0.5); /* Stronger Lime Glow */
+            transform: scale(1.05); /* Slight lift */
+        }
+        /* Ensures the icon text color changes to white when selected */
+        .segmented-control input:checked + label span.icon-text {
+            color: white !important; 
+        }
+        /* General icon sizing for consistency (used for button SVGs) */
+        .icon-sm {
+            width: 1rem; /* h-4 */
+            height: 1rem; /* h-4 */
+        }
+
+        /* Custom Style for IND Region Border (Saffron/White/Green) */
+        .ind-border {
+            border: 4px solid;
+            border-image-slice: 1;
+            /* Create a tricolor gradient: Saffron (#FF9933), White (#FFFFFF), Green (#138808) */
+            border-image-source: linear-gradient(to right, #FF9933 33%, #FFFFFF 33%, #FFFFFF 66%, #138808 66%);
+            box-shadow: 0 0 10px rgba(255, 153, 51, 0.7), 0 0 10px rgba(19, 136, 8, 0.7);
+        }
+
+        /* Custom Style for NA Region Border (Red/White/Blue) */
+        .na-border {
+            border: 4px solid;
+            border-image-slice: 1;
+            /* Red (#B22234), White (#FFFFFF), Blue (#3C3B6E) */
+            border-image-source: linear-gradient(to right, #B22234 33%, #FFFFFF 33%, #FFFFFF 66%, #3C3B6E 66%);
+            box-shadow: 0 0 10px rgba(58, 58, 100, 0.7), 0 0 10px rgba(178, 34, 52, 0.7);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-950 to-gray-900 text-gray-100 flex flex-col">
+
+    <nav class="bg-gray-800/90 backdrop-blur-sm shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 flex items-center">
+                    <span class="text-2xl font-extrabold tracking-wider">
+                        <span class="text-lime-400 animated-title">FF</span> 
+                        <span class="text-gray-100"> ASSETS </span> 
+                        <span class="text-lime-400 animated-title">FINDER</span>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8 w-full" id="tool">
+
+        <section class="text-center mb-10">
+            <h1 class="text-3xl sm:text-4xl font-extrabold text-white mb-2">
+                Asset Link Validator & Preview
+            </h1>
+        </section>
+
+        <div class="bg-gray-900/90 p-6 sm:p-8 rounded-2xl shadow-2xl mb-10 border-t-4 border-lime-600 backdrop-blur-sm" style="box-shadow: 0 0 20px rgba(163, 230, 53, 0.1), 0 0 40px rgba(163, 230, 53, 0.05);">
+            
+            <h2 class="text-xl font-bold mb-4 text-white" id="step-1-header">
+                1. Enter Asset Name
+            </h2>
+
+            <div id="name-input-area" class="flex flex-col md:flex-row gap-3 mb-5">
+                <input id="event-name-input" type="text" placeholder="Enter name part (e.g., VacationRing or Cobra)" 
+                       class="flex-grow p-3 rounded-lg bg-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-lime-500 border border-gray-600 neon-glow-focus"
+                       oninput="this.value = this.value.replace(/[^a-zA-Z0-9_-]/g, '');"> 
+                
+                <button id="generate-button" class="md:w-40 p-3 rounded-lg bg-lime-600 hover:bg-lime-700 text-white font-bold transition duration-200 shadow-md flex items-center justify-center text-sm">
+                    <svg class="icon-sm mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    Next: Select Type
+                </button>
+            </div>
+            
+            <div id="type-selection-area" class="hidden">
+                <div class="flex items-center mb-3">
+                    <button id="cancel-type-selection" class="px-2 py-1 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-200 shadow-md flex items-center justify-center text-xs mr-3">
+                        <svg class="icon-sm mr-1" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        Cancel
+                    </button>
+                    <h2 class="text-xl font-bold text-white">
+                        2. Select Asset Type to Scan
+                    </h2>
+                </div>
+                <div class="flex justify-center mb-5 segmented-control">
+
+                    <div class="flex flex-wrap justify-center gap-3 w-full max-w-3xl">
+
+                        <input type="radio" name="wheel_type" value="TW" id="tw_radio" class="hidden"/>
+                        <label for="tw_radio" class="cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl text-gray-400 hover:text-white font-semibold border-2 flex-1 min-w-[100px] max-w-[120px]">
+                            <span class="icon-text mb-1">TW</span> 
+                            <span class="text-xs text-center">Token Wheel (TW)</span>
+                        </label>
+
+                        <input type="radio" name="wheel_type" value="FW" id="fw_radio" class="hidden"/>
+                        <label for="fw_radio" class="cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl text-gray-400 hover:text-white font-semibold border-2 flex-1 min-w-[100px] max-w-[120px]">
+                            <span class="icon-text mb-1">FW</span> 
+                            <span class="text-xs text-center">Faded Wheel (FW)</span>
+                        </label>
+                        
+                        <input type="radio" name="wheel_type" value="DW" id="dw_radio" class="hidden"/>
+                        <label for="dw_radio" class="cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl text-gray-400 hover:text-white font-semibold border-2 flex-1 min-w-[100px] max-w-[120px]">
+                            <span class="icon-text mb-1">DW</span> 
+                            <span class="text-xs text-center">Step Up (DW)</span>
+                        </label>
+
+                        <input type="radio" name="wheel_type" value="O" id="o_radio" class="hidden"/>
+                        <label for="o_radio" class="cursor-pointer flex flex-col items-center justify-center p-3 rounded-xl text-gray-400 hover:text-white font-semibold border-2 flex-1 min-w-[100px] max-w-[120px]">
+                            <span class="icon-text mb-1">O</span> 
+                            <span class="text-xs text-center">Other Royale (O)</span>
+                        </label>
+
+                    </div>
+                </div>
+            </div>
+
+            <p id="status-message" class="mt-3 text-xs font-semibold text-lime-400 transition-opacity">
+                Status: Ready.
+            </p>
+        </div>
+
+        <section id="results-area" class="min-h-[150px] hidden">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 border-l-4 border-lime-500 pl-4">
+                <h2 class="text-2xl font-bold text-white mb-3 sm:mb-0">
+                    Working Links (<span id="asset-count">0</span>)
+                </h2>
+                <div id="action-buttons" class="flex gap-2 w-full sm:w-auto">
+                    
+                    <button id="reset-button" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition duration-200 shadow-md flex items-center justify-center text-xs">
+                        <svg class="icon-sm mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0014.053 5.568M15 11a3 3 0 11-6 0 3 3 0 016 0zM5.568 14.053A8.001 8.001 0 005.08 10h.488a7.001 7.001 0 0113.845.568L18 13.918V13h-5.918L18.432 19.432a.5.5 0 01-.707.707L12 14.707l-5.725 5.725a.5.5 0 01-.707-.707L11.293 14 5.568 8.275a.5.5 0 01.707-.707L12 13.293l5.725-5.725a.5.5 0 01.707.707L12.707 14" clip-rule="evenodd" /></svg>
+                        Reset
+                    </button>
+
+                    <button id="copy-links-button" class="px-3 py-1.5 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-lg transition duration-200 shadow-md flex items-center justify-center text-xs">
+                        <svg class="icon-sm mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2" /></svg>
+                        Copy All Links
+                    </button>
+                </div>
+            </div>
+            
+            <div id="link-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                </div>
+        </section>
+        
+        <div id="loading-state" class="text-center py-16 bg-gray-800 rounded-lg border border-dashed border-gray-600">
+             <div class="mx-auto loader mb-3 hidden" id="spinner"></div>
+             <h3 class="mt-2 text-lg font-medium text-white" id="main-message">
+                Enter event name (e.g., `VacationRing`)
+            </h3>
+        </div>
+    </main>
+    
+    <footer class="w-full py-3 mt-10 bg-gray-950/70 border-t border-lime-600/50">
+        <div class="max-w-7xl mx-auto px-4 text-center">
+            <p class="text-xs font-bold text-gray-400">
+                &copy; <span class="text-lg animated-copyright font-extrabold">@LEAKS OF FF</span>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // --- BASE URLs ---
+        const DIR_URL = "https://dl.dir.freefiremobile.com/common/Local/IND/config/";
+        const AK_URL = "https://dl.ak.freefiremobile.com/common/Local/IND/config/";
+        const TATA_URL = "https://dl-tata.freefireind.in/common/Local/IND/config/";
+
+        // ADDED/UPDATED: REGION COLOR MAP (for result card styling)
+        const REGION_COLORS = {
+            'SG': { borderColor: 'border-lime-500/50', tagBgColor: 'bg-lime-600' }, // Default (SG - Lime)
+            'IND': { borderColor: '', tagBgColor: 'bg-orange-500' }, // India (IND - Orange)
+            'NA': { borderColor: '', tagBgColor: 'bg-blue-600' }, // America (NA - Blue Tag)
+            'BD': { borderColor: 'border-blue-500/50', tagBgColor: 'bg-blue-600' } // Bangladesh (BD - Blue) - Used for Splash
+        };
+
+        // --- ASSET CONFIGURATION (UPDATED for regional support) ---
+        const WHEEL_CONFIG = {
+            'TW': {
+                name: 'Token Wheel (SG/IND/NA)',
+                domain: DIR_URL,
+                endings: [
+                    // SG Endings
+                    { suffix: 'TabSG_en.jpg', name: 'Tab', region: 'SG' }, 
+                    { suffix: 'TitleSG_en.png', name: 'Title', region: 'SG' }, 
+                    { suffix: 'LobbyBGSG_en.jpg', name: 'Lobby BG', region: 'SG' },
+                    { suffix: 'BGSG_en.png', name: 'BG', region: 'SG' },
+                    // IND Endings
+                    { suffix: 'TabIND_en.jpg', name: 'Tab', region: 'IND' },
+                    { suffix: 'TitleIND_en.png', name: 'Title', region: 'IND' },
+                    { suffix: 'LobbyBGIND_en.jpg', name: 'Lobby BG', region: 'IND' },
+                    { suffix: 'BGIND_en.png', name: 'BG', region: 'IND' },
+                    // NA Endings
+                    { suffix: 'TabNA_en.jpg', name: 'Tab', region: 'NA' },
+                    { suffix: 'TitleNA_en.png', name: 'Title', region: 'NA' }, 
+                    { suffix: 'LobbyBGNA_en.jpg', name: 'Lobby BG', region: 'NA' },
+                    { suffix: 'BGNA_en.png', name: 'BG', region: 'NA' }
+                ],
+                prefix: 'TW',
+                maxWheels: 6
+            },
+            'FW': {
+                name: 'Faded Wheel (SG/IND/NA)',
+                domain: DIR_URL,
+                endings: [
+                    // SG Endings
+                    { suffix: 'TabSG_en.jpg', name: 'Tab', region: 'SG' },
+                    { suffix: 'BGSG_en.jpg', name: 'Background', region: 'SG' },
+                    { suffix: 'TitleSG_en.png', name: 'Title', region: 'SG' },
+                    // IND Endings
+                    { suffix: 'TabIND_en.jpg', name: 'Tab', region: 'IND' },
+                    { suffix: 'BGIND_en.jpg', name: 'Background', region: 'IND' }, 
+                    { suffix: 'TitleIND_en.png', name: 'Title', region: 'IND' },
+                    // NA Endings
+                    { suffix: 'TabNA_en.jpg', name: 'Tab', region: 'NA' },
+                    { suffix: 'BGNA_en.jpg', name: 'Background', region: 'NA' }, 
+                    { suffix: 'TitleNA_en.png', name: 'Title', region: 'NA' }
+                ],
+                prefix: 'FW',
+                maxWheels: 6
+            },
+            'DW': { 
+                name: 'Step Up (SG/IND/NA)',
+                domain: TATA_URL,
+                endings: [
+                    // SG Endings
+                    { suffix: 'TabSG_en.jpg', name: 'Tab', region: 'SG' },
+                    { suffix: '_1_1750x1070_LRBGSG_en.jpg', name: 'Lobby BG', region: 'SG' },
+                    { suffix: '_1600x590_BGSG_en.png', name: 'BG', region: 'SG' },
+                    { suffix: '_492x70_TitleSG_en.png', name: 'Title', region: 'SG' },
+                    // IND Endings
+                    { suffix: 'TabIND_en.jpg', name: 'Tab', region: 'IND' },
+                    { suffix: '_1_1750x1070_LRBGIND_en.jpg', name: 'Lobby BG', region: 'IND' }, 
+                    { suffix: '_1600x590_BGIND_en.png', name: 'BG', region: 'IND' }, 
+                    { suffix: '_492x70_TitleIND_en.png', name: 'Title', region: 'IND' },
+                    // NA Endings
+                    { suffix: 'TabNA_en.jpg', name: 'Tab', region: 'NA' },
+                    { suffix: '_1_1750x1070_LRBGNA_en.jpg', name: 'Lobby BG', region: 'NA' },
+                    { suffix: '_1600x590_BGNA_en.png', name: 'BG', region: 'NA' },
+                    { suffix: '_492x70_TitleNA_en.png', name: 'Title', region: 'NA' }
+                ],
+                prefix: 'DW',
+                maxWheels: 3
+            },
+            // CONFIGURATION FOR TYPE 'O'
+            'O': {
+                name: 'Other Royale (SG/IND/NA)',
+                domain: TATA_URL, 
+                endings: [
+                    // SG Endings
+                    { suffix: 'TabSG_en.jpg', name: 'Tab', region: 'SG' },
+                    { suffix: 'PosterSG_en.png', name: 'Poster', region: 'SG' },
+                    { suffix: 'BGSG_en.jpg', name: 'Background', region: 'SG' },
+                    // IND Endings
+                    { suffix: 'TabIND_en.jpg', name: 'Tab', region: 'IND' },
+                    { suffix: 'PosterIND_en.png', name: 'Poster', region: 'IND' }, 
+                    { suffix: 'BGIND_en.jpg', name: 'Background', region: 'IND' },
+                    // NA Endings
+                    { suffix: 'TabNA_en.jpg', name: 'Tab', region: 'NA' },
+                    { suffix: 'PosterNA_en.png', name: 'Poster', region: 'NA' }, 
+                    { suffix: 'BGNA_en.jpg', name: 'Background', region: 'NA' } 
+                ],
+                prefix: 'O',
+                maxWheels: 3
+            }
+        };
+
+        // Configuration for the STORE HIGHLIGHTS (SH)
+        const SH_CONFIG = {
+            name: 'Store Highlight (SH)',
+            endings: [
+                { url_template: `${AK_URL}(NAME)-256x107_en.png`, name: 'Lobby Banner' },
+                { url_template: `${DIR_URL}252x256_(NAME)_en.jpg`, name: 'Small Banner' },
+                { url_template: `${DIR_URL}1500x750_(NAME)_en.jpg`, name: 'Highlight Background' },
+                // NEW Links for SH
+                { url_template: `${AK_URL}512x182_(NAME)_en.png`, name: 'Medium Banner 1' },
+                { url_template: `${AK_URL}540x108_(NAME)_en.png`, name: 'Medium Banner 2' }
+            ],
+            checks: 5 // Updated count to reflect 3 existing + 2 new links
+        };
+
+        // --- CONFIGURATION FOR BD SPLASH ANNOUNCEMENT ---
+        const BD_SPLASH_CONFIG = {
+            name: 'Splash Banner',
+            url_template: "https://dl.dir.freefiremobile.com/common/Local/BD/Splashanno/1750x1070_(NAME)_en.jpg",
+            type_tag: 'Banner',
+            checks: 1 
+        };
+        // ---------------------------------------------------
+
+        // Global variables for state management
+        let foundLinksUrls = []; 
+        let storedEventName = ''; 
+
+        // Helper function to check image URL validity
+        const checkImageValidity = (url) => {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                // Set a reasonable timeout for concurrent checks
+                setTimeout(() => resolve(false), 3000); 
+                img.src = url;
+            });
+        };
+        
+        // Creates a promise for a single asset check (UPDATED to include region)
+        const createAssetCheck = (type, name, url, region = 'N/A') => {
+            return checkImageValidity(url).then(isValid => {
+                // Return an object indicating success or failure
+                return { type, name, url, isValid, region }; 
+            });
+        };
+
+        // --- Utility SVGs (Unchanged) ---
+        const CHECK_SVG = `<svg class="icon-sm" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>`;
+        const CLIPBOARD_SVG = `<svg class="icon-sm" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 002 2h2a2 2 0 002-2" /></svg>`;
+        const LINK_SVG = `<svg class="icon-sm" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.101a4 4 0 005.656 0l4-4a4 4 0 10-5.656-5.656l-1.1 1.1" /></svg>`;
+        const XMARK_SVG = `<svg class="icon-sm" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>`;
+        const REFRESH_SVG = `<svg class="icon-sm mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 0014.053 5.568M15 11a3 3 0 11-6 0 3 3 0 016 0zM5.568 14.053A8.001 8.001 0 005.08 10h.488a7.001 7.001 0 0113.845.568L18 13.918V13h-5.918L18.432 19.432a.5.5 0 01-.707.707L12 14.707l-5.725 5.725a.5.5 0 01-.707-.707L11.293 14 5.568 8.275a.5.5 0 01.707-.707L12 13.293l5.725-5.725a.5.5 0 01.707.707L12.707 14" clip-rule="evenodd" /></svg>`;
+
+
+        // --- Utility Functions (Unchanged) ---
+        function copyAllLinks(urls, buttonElement) {
+            if (urls.length === 0) return;
+            const linksText = urls.join('\n');
+            
+            navigator.clipboard.writeText(linksText).then(() => {
+                const originalText = buttonElement.innerHTML;
+                buttonElement.innerHTML = `<span class="mr-2">${CHECK_SVG}</span> Links Copied!`; 
+                buttonElement.classList.remove('bg-violet-600', 'hover:bg-violet-700');
+                buttonElement.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalText;
+                    buttonElement.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    buttonElement.classList.add('bg-violet-600', 'hover:bg-violet-700');
+                }, 1500);
+                
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy links. Please check console for details.');
+            });
+        }
+        
+        function openSingleLink(url) {
+            window.open(url, '_blank');
+        }
+
+        function copySingleLink(url, buttonElement) {
+            navigator.clipboard.writeText(url).then(() => {
+                const originalText = buttonElement.innerHTML;
+                buttonElement.innerHTML = `<span class="mr-1">${CHECK_SVG}</span> Copied!`;
+                buttonElement.classList.remove('bg-violet-600', 'hover:bg-violet-700');
+                buttonElement.classList.add('bg-lime-500', 'hover:bg-lime-600');
+                
+                setTimeout(() => {
+                    buttonElement.innerHTML = originalText;
+                    buttonElement.classList.remove('bg-lime-500', 'hover:bg-lime-600');
+                    buttonElement.classList.add('bg-violet-600', 'hover:bg-violet-700');
+                }, 1500);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy link.');
+            });
+        }
+
+        function resetApp() {
+            // Clear internal state
+            storedEventName = '';
+            foundLinksUrls = [];
+
+            // Reset UI elements to initial state
+            document.getElementById('event-name-input').value = ''; 
+            document.getElementById('step-1-header').textContent = `1. Enter Asset Name`;
+            document.getElementById('status-message').textContent = `Status: Ready.`;
+            document.getElementById('main-message').textContent = `Enter event name (e.g., \`VacationRing or BPS36\`).`;
+            document.getElementById('link-container').innerHTML = '';
+            document.getElementById('asset-count').textContent = '0';
+            
+            // --- NEW: Reset text colors to default ---
+            document.getElementById('status-message').classList.remove('text-red-400');
+            document.getElementById('status-message').classList.add('text-lime-400');
+            document.getElementById('main-message').classList.remove('text-red-400');
+            document.getElementById('main-message').classList.add('text-white');
+            
+            // Show Step 1, Hide Step 2 & Results
+            document.getElementById('name-input-area').classList.remove('hidden');
+            document.getElementById('type-selection-area').classList.add('hidden');
+            document.getElementById('results-area').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('spinner').classList.add('hidden');
+            
+            // Ensure generate button is enabled
+            document.getElementById('generate-button').disabled = false;
+
+            // Uncheck all radio buttons 
+            document.querySelectorAll('.segmented-control input[name="wheel_type"]').forEach(radio => {
+                radio.checked = false;
+            });
+        }
+
+        // NEW: Function to cancel type selection and return to name entry
+        function cancelTypeSelection() {
+            const eventName = document.getElementById('event-name-input').value.trim();
+            
+            // 1. Re-show Step 1, Hide Step 2
+            document.getElementById('name-input-area').classList.remove('hidden');
+            document.getElementById('type-selection-area').classList.add('hidden');
+            
+            // 2. Reset header text
+            document.getElementById('step-1-header').textContent = `1. Enter Asset Name`;
+            
+            // 3. Update status messages to reflect return to previous step
+            document.getElementById('status-message').textContent = `Status: Scan cancelled. Re-select type to proceed with the current name.`;
+            document.getElementById('main-message').textContent = `Enter event name (e.g., \`VacationRing or BPS36\`).`; // Reset main message
+            
+            // 4. Ensure name input is still populated (it already is) and generate button is enabled
+            document.getElementById('generate-button').disabled = false;
+            
+            // 5. Clear stored name so Step 2 requires re-entry
+            storedEventName = '';
+
+            // 6. Uncheck all radio buttons 
+            document.querySelectorAll('.segmented-control input[name="wheel_type"]').forEach(radio => {
+                radio.checked = false;
+            });
+
+            // 7. Restore default text colors
+            document.getElementById('status-message').classList.remove('text-red-400');
+            document.getElementById('status-message').classList.add('text-lime-400');
+            document.getElementById('main-message').classList.remove('text-red-400');
+            document.getElementById('main-message').classList.add('text-white');
+        }
+
+
+        // --- Event Listeners for Global Buttons (Unchanged) ---
+        document.getElementById('copy-links-button').addEventListener('click', function() {
+            copyAllLinks(foundLinksUrls, this);
+        });
+
+        document.getElementById('reset-button').addEventListener('click', resetApp);
+        // ----------------------------------------
+
+        // --- MAIN SCAN LOGIC (Refactored for Concurrency and Diagnostics) ---
+        async function startScan(eventName, selectedWheelType) {
+            const wheelConfig = WHEEL_CONFIG[selectedWheelType];
+            
+            const linkContainer = document.getElementById('link-container');
+            const resultsArea = document.getElementById('results-area');
+            const statusMessage = document.getElementById('status-message');
+            const spinner = document.getElementById('spinner');
+            const mainMessage = document.getElementById('main-message');
+            const generateButton = document.getElementById('generate-button');
+
+            // --- UI State: Loading ---
+            document.getElementById('type-selection-area').classList.add('hidden');
+            resultsArea.classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            spinner.classList.remove('hidden');
+            generateButton.disabled = true;
+
+            const totalWheelChecks = wheelConfig.maxWheels * wheelConfig.endings.length;
+            // The total number of checks is updated based on the new SH_CONFIG.checks value (now 5)
+            const totalChecks = totalWheelChecks + SH_CONFIG.checks + BD_SPLASH_CONFIG.checks; 
+
+            // Reset text colors to default before scan starts (in case a previous scan failed)
+            mainMessage.classList.remove('text-red-400');
+            mainMessage.classList.add('text-white');
+            statusMessage.classList.remove('text-red-400');
+            statusMessage.classList.add('text-lime-400');
+
+            // MODIFIED: Removed the count of links being scanned.
+            mainMessage.textContent = `Scanning asset links concurrently...`;
+            statusMessage.textContent = `Status: Initiating concurrent scan. This is much faster!`;
+
+            const allChecks = [];
+
+            // ===================================
+            // 1. COLLECT WHEEL ASSET PROMISES 
+            // ===================================
+            for (let i = 1; i <= wheelConfig.maxWheels; i++) {
+                for (const asset of wheelConfig.endings) {
+                    const type = `${wheelConfig.prefix}${i}`;
+                    const generatedLink = `${wheelConfig.domain}${type}_${eventName}${asset.suffix}`;
+                    // Pass the region from the asset config
+                    allChecks.push(createAssetCheck(type, asset.name, generatedLink, asset.region || 'N/A')); 
+                }
+            }
+
+            // ===================================
+            // 2. COLLECT STORE HIGHLIGHTS (SH) PROMISES
+            // ===================================
+            for (const asset of SH_CONFIG.endings) {
+                const type = 'SH';
+                const generatedLink = asset.url_template.replace('(NAME)', eventName);
+                allChecks.push(createAssetCheck(type, asset.name, generatedLink, 'SG')); // Assume SG/Global for SH
+            }
+            
+            // ===================================
+            // 3. COLLECT BD SPLASH ANNOUNCEMENT PROMISE
+            // ===================================
+            const bdSplashLink = BD_SPLASH_CONFIG.url_template.replace('(NAME)', eventName);
+            allChecks.push(createAssetCheck(BD_SPLASH_CONFIG.type_tag, BD_SPLASH_CONFIG.name, bdSplashLink, 'BD')); // Passed region 'BD'
+
+
+            // ===================================
+            // 4. EXECUTE ALL CHECKS CONCURRENTLY
+            // ===================================
+            const results = await Promise.all(allChecks);
+            
+            // --- 5. PROCESS RESULTS & FILTER ---
+            // Filter out invalid links but log them for diagnostics
+            let workingLinks = results.filter(link => {
+                if (!link.isValid) {
+                    console.log(`%c[FAILED CHECK] ${link.type} - ${link.name}:`, 'color: #ff6347; font-weight: bold;');
+                    console.log(link.url);
+                    return false;
+                }
+                return true;
+            });
+            
+            // Apply original logic: Keep only links for the lowest-numbered wheel (e.g., TW1 over TW2)
+            const wheelLinks = workingLinks.filter(link => link.type.startsWith(wheelConfig.prefix));
+            const nonWheelLinks = workingLinks.filter(link => !link.type.startsWith(wheelConfig.prefix));
+
+            let finalWheelLinks = [];
+            if (wheelLinks.length > 0) {
+                // Determine the minimum number found (e.g., if TW2 and TW3 links work, minNumber is 2)
+                const lowestNumber = Math.min(...wheelLinks.map(link => parseInt(link.type.replace(wheelConfig.prefix, ''), 10)));
+                // Keep only the links that match that lowest number
+                finalWheelLinks = wheelLinks.filter(link => parseInt(link.type.replace(wheelConfig.prefix, ''), 10) === lowestNumber);
+            }
+            
+            // Combine the final, filtered list
+            workingLinks = [...nonWheelLinks, ...finalWheelLinks];
+
+
+            // ===================================
+            // 6. SORT LINKS & DISPLAY
+            // ===================================
+            workingLinks.sort((a, b) => {
+                const isABDSplash = a.region === 'BD';
+                const isBBDSplash = b.region === 'BD';
+
+                // 1. BD Splash goes first
+                if (isABDSplash && !isBBDSplash) return -1;
+                if (!isABDSplash && isBBDSplash) return 1;
+
+                // 2. SH links go next
+                const isASh = a.type === 'SH';
+                const isBSh = b.type === 'SH';
+                if (isASh && !isBSh) return -1; 
+                if (!isASh && isBSh) return 1;  
+                
+                // 3. Otherwise, sort by name
+                return a.name.localeCompare(b.name);
+            });
+            
+            foundLinksUrls = workingLinks.map(link => link.url);
+
+            // --- UI State: Results ---
+            spinner.classList.add('hidden');
+            generateButton.disabled = false;
+
+            const count = workingLinks.length;
+            document.getElementById('asset-count').textContent = count;
+            linkContainer.innerHTML = '';
+            
+            if (count > 0) {
+                // Display success
+                mainMessage.classList.remove('text-red-400');
+                mainMessage.classList.add('text-white');
+                statusMessage.classList.remove('text-red-400');
+                statusMessage.classList.add('text-lime-400');
+
+                resultsArea.classList.remove('hidden');
+                document.getElementById('loading-state').classList.add('hidden');
+                statusMessage.textContent = `Status: Found ${count} total working asset links in a fraction of the time! Click Reset to start a new search.`;
+                
+                workingLinks.forEach(link => {
+                    let borderColor = 'border-lime-500/50';
+                    let tagBgColor = 'bg-lime-600';
+                    let extraClasses = ''; // Initialize extraClasses
+                    
+                    // --- Apply Region/Type Specific Color Coding ---
+                    if (link.region === 'IND') {
+                         // India Flag colors: Saffron/White/Green Custom Border
+                         extraClasses = 'ind-border'; 
+                         borderColor = ''; // Override the default border with the custom class
+                         tagBgColor = REGION_COLORS['IND'].tagBgColor; 
+                    } else if (link.region === 'NA') {
+                         // NA Flag colors: Red/White/Blue Custom Border
+                         extraClasses = 'na-border'; // New border class
+                         borderColor = ''; // Override the default border with the custom class
+                         tagBgColor = REGION_COLORS['NA'].tagBgColor; 
+                    } else if (link.region === 'BD') {
+                         // Distinct color for BD Splash
+                         borderColor = REGION_COLORS['BD'].borderColor;
+                         tagBgColor = REGION_COLORS['BD'].tagBgColor;
+                    } else if (link.type === 'SH') {
+                        borderColor = 'border-violet-500/50';
+                        tagBgColor = 'bg-violet-600';
+                    } else if (link.type.startsWith('DW')) {
+                         // Set distinct color for DW if no region border applies
+                         if (!extraClasses) { 
+                             borderColor = 'border-amber-500/50';
+                         }
+                         tagBgColor = 'bg-amber-600';
+                    } else if (link.type.startsWith('O')) {
+                        // Set distinct color for O if no region border applies
+                        if (!extraClasses) {
+                            borderColor = 'border-fuchsia-500/50';
+                        }
+                        tagBgColor = 'bg-fuchsia-600';
+                    } 
+                    // Default for SG is lime (set initially)
+
+
+                    const tagText = link.region !== 'N/A' ? `${link.type} (${link.region})` : link.type;
+
+                    const cardHTML = `
+                        <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl border ${borderColor} ${extraClasses}">
+                            <div class="bg-gray-700 relative p-1 overflow-hidden">
+                                <a href="${link.url}" target="_blank" title="View Full Size" class="block">
+                                    <img src="${link.url}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'><text y=\\'50%\\' x=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'10\\' fill=\\'#D1D5DB\\'>Loading Failed / Invalid Image</text></svg>'" alt="${link.name} Preview" class="w-full h-auto max-h-96 object-contain mx-auto">
+                                </a>
+                                <span class="absolute top-2 right-2 px-1 py-0.5 ${tagBgColor} text-xs font-bold rounded-full">${tagText}</span>
+                            </div>
+                            <div class="p-2 pb-0">
+                                <p class="text-xs font-semibold text-white truncate">${link.name}</p>
+                                <p class="text-2xs text-amber-400 mt-1">${link.url.substring(link.url.lastIndexOf('/') + 1)}</p>
+                            </div>
+                            <div class="flex gap-2 p-2 pt-1">
+                                <button onclick="openSingleLink('${link.url}')" class="flex-1 px-2 py-1 bg-lime-600 hover:bg-lime-700 text-white font-bold rounded-md transition duration-200 shadow-sm text-xs flex items-center justify-center">
+                                    <span class="mr-1">${LINK_SVG}</span> Open Link
+                                </button>
+                                <button onclick="copySingleLink('${link.url}', this)" class="flex-1 px-2 py-1 bg-violet-600 hover:bg-violet-700 text-white font-bold rounded-md transition duration-200 shadow-sm text-xs flex items-center justify-center">
+                                    <span class="mr-1">${CLIPBOARD_SVG}</span> Copy Link
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    linkContainer.innerHTML += cardHTML;
+                });
+            } else {
+                // Display failure
+                resultsArea.classList.add('hidden');
+                document.getElementById('loading-state').classList.remove('hidden');
+                
+                // --- NEW: Apply Red Text for Failure ---
+                mainMessage.classList.remove('text-white');
+                mainMessage.classList.add('text-red-400');
+                statusMessage.classList.remove('text-lime-400');
+                statusMessage.classList.add('text-red-400');
+
+                mainMessage.innerHTML = `<span class="mr-1">${XMARK_SVG}</span> No working links found for '${eventName}'.`;
+                statusMessage.textContent = `Status: Scan complete. 0 assets found.`;
+            }
+
+            // Reset UI back to Step 1: Name Input (keeping the name)
+            document.getElementById('name-input-area').classList.remove('hidden');
+            document.getElementById('step-1-header').textContent = `1. Enter Asset Name`;
+            document.getElementById('event-name-input').value = eventName; // Keep the name in the input
+            storedEventName = '';
+            
+            // Uncheck all radio buttons after scan
+            document.querySelectorAll('.segmented-control input[name="wheel_type"]').forEach(radio => {
+                radio.checked = false;
+            });
+        }
+
+        // --- Step 1: Name Input Handler ---
+        document.getElementById('generate-button').addEventListener('click', function() {
+            const nameInput = document.getElementById('event-name-input');
+            const eventName = nameInput.value.trim();
+            
+            if (eventName === '') {
+                alert('Please enter the asset name part (e.g., VacationRing).');
+                return;
+            }
+
+            // Store name and transition UI
+            storedEventName = eventName;
+            
+            // Hide Step 1 UI
+            document.getElementById('name-input-area').classList.add('hidden');
+            
+            // Update header text to confirm name entry 
+            document.getElementById('step-1-header').textContent = `1. Name Entered: ${eventName}`;
+            
+            // Show Step 2 UI
+            document.getElementById('type-selection-area').classList.remove('hidden');
+            document.getElementById('status-message').textContent = `Status: Name stored. Please select an asset type to begin scan.`;
+
+            // --- NEW: Reset text colors to default (lime/white) ---
+            document.getElementById('status-message').classList.remove('text-red-400');
+            document.getElementById('status-message').classList.add('text-lime-400');
+            document.getElementById('main-message').classList.remove('text-red-400');
+            document.getElementById('main-message').classList.add('text-white');
+
+            // Hide results area if it was showing
+            document.getElementById('results-area').classList.add('hidden');
+            document.getElementById('loading-state').classList.remove('hidden');
+            document.getElementById('spinner').classList.add('hidden');
+            document.getElementById('main-message').textContent = `Select an asset type (TW, FW, DW, or O) above to begin scanning for '${eventName}'.`;
+        });
+
+        // --- Step 2: Type Selection Handler (Unchanged) ---
+        document.querySelectorAll('.segmented-control input[name="wheel_type"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                if (this.checked && storedEventName) {
+                    startScan(storedEventName, this.value);
+                }
+            });
+        });
+
+        // NEW Listener for the Cancel button
+        document.getElementById('cancel-type-selection').addEventListener('click', cancelTypeSelection);
+
+        // Initialize the app state (only needs to be called once)
+        resetApp(); 
+    </script>
+</body>
+</html>
