@@ -125,6 +125,15 @@
             border-image-source: linear-gradient(to right, #B22234 33%, #FFFFFF 33%, #FFFFFF 66%, #3C3B6E 66%);
             box-shadow: 0 0 10px rgba(58, 58, 100, 0.7), 0 0 10px rgba(178, 34, 52, 0.7);
         }
+
+        /* --- NEW: Custom Style for EU Region Border (Blue/White/Red) --- */
+        .eu-border {
+            border: 4px solid;
+            border-image-slice: 1;
+            /* Blue (#003087 - Darker EU blue), White (#FFFFFF), Red (#C8102E - US Red for contrast) */
+            border-image-source: linear-gradient(to right, #003087 33%, #FFFFFF 33%, #FFFFFF 66%, #C8102E 66%);
+            box-shadow: 0 0 10px rgba(0, 48, 135, 0.7), 0 0 10px rgba(200, 16, 46, 0.7);
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-950 to-gray-900 text-gray-100 flex flex-col">
@@ -265,7 +274,9 @@
             'SG': { borderColor: 'border-lime-500/50', tagBgColor: 'bg-lime-600' }, // Default (SG - Lime)
             'IND': { borderColor: '', tagBgColor: 'bg-orange-500' }, // India (IND - Orange)
             'NA': { borderColor: '', tagBgColor: 'bg-blue-600' }, // America (NA - Blue Tag)
-            'BD': { borderColor: 'border-blue-500/50', tagBgColor: 'bg-blue-600' } // Bangladesh (BD - Blue) - Used for Splash
+            'BD': { borderColor: 'border-blue-500/50', tagBgColor: 'bg-blue-600' }, // Bangladesh (BD - Blue) - Used for Splash
+            // NEW REGION: EU
+            'EU': { borderColor: '', tagBgColor: 'bg-indigo-600' } // Europe (EU - Indigo Tag)
         };
 
         // --- ASSET CONFIGURATION (UPDATED for regional support) ---
@@ -313,8 +324,9 @@
                 prefix: 'FW',
                 maxWheels: 6
             },
+            // UPDATED: Added EU Endings
             'DW': { 
-                name: 'Step Up (SG/IND/NA)',
+                name: 'Step Up (SG/IND/NA/EU)',
                 domain: TATA_URL,
                 endings: [
                     // SG Endings
@@ -331,7 +343,12 @@
                     { suffix: 'TabNA_en.jpg', name: 'Tab', region: 'NA' },
                     { suffix: '_1_1750x1070_LRBGNA_en.jpg', name: 'Lobby BG', region: 'NA' },
                     { suffix: '_1600x590_BGNA_en.png', name: 'BG', region: 'NA' },
-                    { suffix: '_492x70_TitleNA_en.png', name: 'Title', region: 'NA' }
+                    { suffix: '_492x70_TitleNA_en.png', name: 'Title', region: 'NA' },
+                    // EU Endings (NEW)
+                    { suffix: 'TabEU_en.jpg', name: 'Tab', region: 'EU' },
+                    { suffix: '_1_1750x1070_LRBGEU_en.jpg', name: 'Lobby BG', region: 'EU' }, 
+                    { suffix: '_1600x590_BGEU_en.png', name: 'BG', region: 'EU' }, 
+                    { suffix: '_492x70_TitleEU_en.png', name: 'Title', region: 'EU' }
                 ],
                 prefix: 'DW',
                 maxWheels: 3
@@ -391,11 +408,30 @@
         const checkImageValidity = (url) => {
             return new Promise(resolve => {
                 const img = new Image();
-                img.onload = () => resolve(true);
-                img.onerror = () => resolve(false);
-                // Set a reasonable timeout for concurrent checks
-                setTimeout(() => resolve(false), 3000); 
+                // **UPDATED LOGIC START**
+                let timer; 
+                
+                // Success: Clear the timer and resolve true
+                img.onload = () => {
+                    clearTimeout(timer); // CRITICAL: Stop the timeout
+                    resolve(true);
+                };
+                
+                // Failure: Clear the timer and resolve false
+                img.onerror = () => {
+                    clearTimeout(timer); // CRITICAL: Stop the timeout
+                    resolve(false);
+                };
+                
+                // Set the requested 5-second timeout (5000ms)
+                timer = setTimeout(() => {
+                    img.onload = null; // Prevent a late load from resolving the now-failed check
+                    img.onerror = null;
+                    resolve(false);
+                }, 5000); // 5-second timeout
+                
                 img.src = url;
+                 // **UPDATED LOGIC END**
             });
         };
         
@@ -704,6 +740,11 @@
                          extraClasses = 'na-border'; // New border class
                          borderColor = ''; // Override the default border with the custom class
                          tagBgColor = REGION_COLORS['NA'].tagBgColor; 
+                    } else if (link.region === 'EU') {
+                         // EU Flag colors: Blue/White/Red Custom Border (NEW)
+                         extraClasses = 'eu-border'; 
+                         borderColor = ''; 
+                         tagBgColor = REGION_COLORS['EU'].tagBgColor; 
                     } else if (link.region === 'BD') {
                          // Distinct color for BD Splash
                          borderColor = REGION_COLORS['BD'].borderColor;
@@ -733,7 +774,7 @@
                         <div class="bg-gray-800 rounded-lg overflow-hidden shadow-xl border ${borderColor} ${extraClasses}">
                             <div class="bg-gray-700 relative p-1 overflow-hidden">
                                 <a href="${link.url}" target="_blank" title="View Full Size" class="block">
-                                    <img src="${link.url}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'><text y=\\'50%\\' x=\\'50%\\' dominant-baseline=\\'middle\\' text-anchor=\\'middle\\' font-size=\\'10\\' fill=\\'#D1D5DB\\'>Loading Failed / Invalid Image</text></svg>'" alt="${link.name} Preview" class="w-full h-auto max-h-96 object-contain mx-auto">
+                                    <img src="${link.url}" onerror="this.src='https://via.placeholder.com/400x200/1F2937/D1D5DB?text=Image+Load+Failed'" alt="${link.name} Preview" class="w-full h-auto max-h-96 object-contain mx-auto">
                                 </a>
                                 <span class="absolute top-2 right-2 px-1 py-0.5 ${tagBgColor} text-xs font-bold rounded-full">${tagText}</span>
                             </div>
